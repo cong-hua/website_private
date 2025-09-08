@@ -19,6 +19,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 浮动元素动画
     initFloatingElements();
+    
+    // 照片弹窗功能
+    initPhotoModal();
 });
 
 // Matrix背景效果
@@ -365,3 +368,103 @@ const rippleStyles = `
 const rippleStyleSheet = document.createElement('style');
 rippleStyleSheet.textContent = rippleStyles;
 document.head.appendChild(rippleStyleSheet);
+
+// 照片弹窗功能
+function initPhotoModal() {
+    const photoItems = document.querySelectorAll('.photo-item');
+    const modal = document.getElementById('photo-modal');
+    const modalImage = document.getElementById('modal-image');
+    const closeModal = document.querySelector('.close-modal');
+    const prevBtn = document.getElementById('prev-photo');
+    const nextBtn = document.getElementById('next-photo');
+    
+    let currentPhotoIndex = 0;
+    const photos = Array.from(photoItems).map(item => item.getAttribute('data-photo'));
+    
+    // 打开弹窗
+    photoItems.forEach((item, index) => {
+        item.addEventListener('click', () => {
+            currentPhotoIndex = index;
+            showPhoto(currentPhotoIndex);
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        });
+    });
+    
+    // 关闭弹窗
+    closeModal.addEventListener('click', closePhotoModal);
+    
+    // 点击弹窗背景关闭
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closePhotoModal();
+        }
+    });
+    
+    // ESC键关闭弹窗
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.style.display === 'block') {
+            closePhotoModal();
+        }
+        if (modal.style.display === 'block') {
+            if (e.key === 'ArrowLeft') {
+                showPrevPhoto();
+            } else if (e.key === 'ArrowRight') {
+                showNextPhoto();
+            }
+        }
+    });
+    
+    // 上一张照片
+    prevBtn.addEventListener('click', showPrevPhoto);
+    
+    // 下一张照片
+    nextBtn.addEventListener('click', showNextPhoto);
+    
+    function showPhoto(index) {
+        if (index >= 0 && index < photos.length) {
+            modalImage.src = photos[index];
+            currentPhotoIndex = index;
+        }
+    }
+    
+    function showPrevPhoto() {
+        currentPhotoIndex = (currentPhotoIndex - 1 + photos.length) % photos.length;
+        showPhoto(currentPhotoIndex);
+    }
+    
+    function showNextPhoto() {
+        currentPhotoIndex = (currentPhotoIndex + 1) % photos.length;
+        showPhoto(currentPhotoIndex);
+    }
+    
+    function closePhotoModal() {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+    
+    // 触摸滑动支持
+    let startX = 0;
+    let endX = 0;
+    
+    modalImage.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+    });
+    
+    modalImage.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+    });
+    
+    modalImage.addEventListener('touchend', (e) => {
+        endX = e.changedTouches[0].clientX;
+        const difference = startX - endX;
+        
+        if (Math.abs(difference) > 50) {
+            if (difference > 0) {
+                showNextPhoto();
+            } else {
+                showPrevPhoto();
+            }
+        }
+    });
+}
